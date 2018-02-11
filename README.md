@@ -49,7 +49,7 @@ I find XBPS multi-binary not very convenient. Also enabling services is tedious 
 ### Todo:
 
 - add autoinstall script,
-- add flatpack support (probably as separate set of commands, flatpack is slower then xbps),
+- add flatpak support (probably as separate set of commands, flatpack is slower then xbps),
 - maybe add more commands if needed ...
 
 ### Alternatives:
