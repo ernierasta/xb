@@ -17,12 +17,12 @@ _xbps_installed_reply() {
 }
 
 _sv_enabled_reply() {
-	COMPREPLY=( $( compgen -W '$(ls /var/service/)' -- "$1" )  )
+	COMPREPLY=( $( compgen -W '$(ls --color=never /var/service/)' -- "$1" )  )
 }
 
 _sv_disabled() {
-	local enabled=$(ls /var/service/)
-	local availabile=$(ls /etc/sv/)
+	local enabled=$(ls --color=never /var/service/)
+	local availabile=$(ls --color=never /etc/sv/)
 	local tdis=""
 
 	for sv in $availabile; do
