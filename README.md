@@ -54,5 +54,5 @@ I find XBPS multi-binary not very convenient. Also enabling services is tedious 
 
 ### Alternatives:
 
-- [vpm](https://github.com/netzve@surweigerer/vpm) - probably advanced, more powerful wrapper, with colors!
+- [vpm](https://github.com/netzverweigerer/vpm) - probably advanced, more powerful wrapper, with colors!
 - [octoxbps](https://github.com/aarnt/octoxbps) - QT5 GUI for XBPS
