@@ -1,10 +1,10 @@
-# x
+# xb
 
 ## VoidLinux XBPS primitive wrapper with bash-completion
 
 Ahoy VoidLinux comrades!
 
-This is just quick wrapper for XBPS and runit. I think there are already some alternatives and this is probably the simplest wrapper. It provides simple interface inspired by Alpine Linux apk (similar to Debian's aptitude).
+This is just quick wrapper for XBPS, flatpak and runit. I think there are already some alternatives and this is probably the simplest wrapper. It provides simple interface inspired by Alpine Linux apk (similar to Debian's aptitude).
 
 **There are actually tree functionalities:**
 
@@ -60,6 +60,7 @@ flatpak interface ... ;-).
 ### Todo:
 
 - add autoinstall script,
+
 ~~- add flatpak support (probably as separate set of commands, flatpak is slower then xbps),~~
 - fix short flatpak names (for now skype is there as "client", becouse of: com.skype.Client), test it more.
 - maybe add more commands if needed ...
