@@ -26,7 +26,7 @@ xb fadd <TAB>    #will list flatpak packages
 ### Installation:
 
 ```shell
-$ git clone https://github.com/ernierasta/xb && cd x
+$ git clone https://github.com/ernierasta/xb && cd xb
 $ sudo cp xb /usr/local/bin/
 $ sudo cp complete/xb /usr/share/bash-completion/completions/
 ```
