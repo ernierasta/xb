@@ -8,12 +8,28 @@ _xbps_installed_packages() {
 	xbps-query -l | sed 's/^.. \([^ ]*\)-.* .*/\1/'
 }
 
+_xbps_all_repos() {
+	x repolist | cut -d" " -f2
+}
+
+_xbps_installed_repos() {
+	x repolist -l | cut -d" " -f2
+}
+
 _xbps_all_reply() {
 	COMPREPLY=( $( compgen -W '$(_xbps_all_packages "$1")' -- "$1") )
 }
 
 _xbps_installed_reply() {
 	COMPREPLY=( $( compgen -W '$(_xbps_installed_packages)' -- "$1") )
+}
+
+_xbps_all_repos_reply() {
+	COMPREPLY=( $( compgen -W '$(_xbps_all_repos)' -- "$1" )  )
+}
+
+_xbps_installed_repos_reply() {
+	COMPREPLY=( $( compgen -W '$(_xbps_installed_repos)' -- "$1"  )   )
 }
 
 _sv_enabled_reply() {
@@ -37,8 +53,24 @@ _sv_disabled_reply() {
 	COMPREPLY=( $( compgen -W '$(_sv_disabled)' -- "$1" )  )
 }
 
+_flatpak_all_packages() {
+	x flist -s 
+}
+
+_flatpak_installed_packages() {
+	x flist -i
+}
+
+_flatpak_all_packages_reply() {
+	COMPREPLY=( $( compgen -W '$(_flatpak_all_packages)' -- "$1" )  )
+}
+
+_flatpak_repos_reply() {
+	COMPREPLY=( $( compgen -W 'flathub' -- "$1" ) )
+}
+
 _x() {
-	local actions="add del files info list search upgrade slist son soff"
+	local actions="add del files info list search upgrade repoadd repodel repolist slist son soff fadd fdel finfo flist fsearch fupgrade frepoadd frepodel"
 	local cur
 	cur="${COMP_WORDS[COMP_CWORD]}"
 	
@@ -52,11 +84,23 @@ _x() {
 			del|files)
 				_xbps_installed_reply $cur
 			;;
+			repoadd)
+				_xbps_all_repos_reply $cur
+			;;
+			repodel)
+				_xbps_installed_repos_reply $cur
+			;;
 			soff)
 				_sv_enabled_reply $cur
 			;;
 			son)
 				_sv_disabled_reply $cur
+			;;
+			fadd|fsearch|flist|finfo)
+				_flatpak_all_packages_reply $cur
+			;;
+			frepoadd|frepodel)
+				_flatpak_repos_reply $cur
 			;;
 		esac
 	fi

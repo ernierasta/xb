@@ -23,6 +23,17 @@ update|upgrade			Update all packages.
 list				List all installed packeges.
 info				Show information about package.
 files				Show files in package.
+repoadd	<repository>		Add new <repository> (glibc only).
+repodel	<repository>		Remove installed <repository> (glibc only).
+repolist [-l]			List avaibile repos. Use -l to show installed repos.
+
+FLATPAK
+
+fadd [-u] <package>		Install <package>(names like: vim, gimp,...). Use -u to install as user.
+fdel [-u] <package>		Remove <package>. Use -u to remove user package.
+fsearch <package>		Find package in remote repo or local metadata.
+fupgrade [-u]			Upgrade all packages and fetch local metadata. Use -u to upgrade users packages.
+flist [-i]			List remote packages. Use -i to list installed.
 
 SERVICES
 
@@ -40,7 +51,7 @@ add() {
         
         for a in $OPTS; do
                 case "$a" in
-		add|install) ;;
+		add|install|repoadd) ;;
                 -s | --sync) sync="-S " ;;
                 -h | --help) usage;;
                 *) pk="$a $pk";;
@@ -49,8 +60,8 @@ add() {
 	
 	pk=$(echo "$pk" | xargs)
 
-	xbps-install $sync$pk
 	#echo "xbps-install $sync$pk"
+	xbps-install $sync$pk
 }
 
 del() {
@@ -60,7 +71,7 @@ del() {
         
         for a in $OPTS; do
                 case "$a" in
-		del|remove) ;;
+		del|remove|repodel) ;;
                 -o | --only) norec="" ;;
                 -h | --help) usage;;
                 *) pk="$a $pk";;
@@ -69,7 +80,7 @@ del() {
 	
 	pk=$(echo "$pk" | xargs)
 
-	echo "xbps-remove $norec$pk"
+	#echo "xbps-remove $norec$pk"
 	xbps-remove $norec$pk
 }
 
@@ -81,7 +92,7 @@ search() {
         
         for a in $OPTS; do
                 case "$a" in
-		search|find) ;;
+		search|find|repolist) ;;
                 -l | --local) remote="-s " ;;
                 -h | --help) usage;;
                 *) pk="$a";;
@@ -107,6 +118,20 @@ info() {
 
 files() {
 	xbps-query -f "$1"
+}
+
+repolist() {
+	search "$@ void-repo"
+}
+
+repoadd() {
+	add "$@"
+	xbps-install -S
+}
+
+repodel() {
+	del "$@"
+	xbps-install -S
 }
 
 # services
@@ -151,6 +176,271 @@ slist() {
 
 }
 
+
+# flatpak functions
+
+frepo_and_name_unprotected() {
+	local search="$1"
+	local apps="$2"
+	echo "$apps" | grep -i \\.$search
+}
+
+_flist_enumerable_repos(){
+	flatpak remotes | grep -v no-enumerate | cut -d' ' -f1
+}
+
+# fall_apps will list all availabile flatpak apps
+# problem is, if repo has flag: no-enumerate flatpak remote-ls will fail
+# we need to find all repos without this flag and enumerate one by one ... yeah this sucks.
+# result is cached for an hour. This will make autocompletion usable.
+fall_apps() {
+	local nocache="$1"
+	local cachef="/tmp/x-apps.cache"
+	local expire=300 # 5 min
+
+	if [ -z $nocache ] && [ -f "$cachef"  ] && [ $(expr $(date +%s) - $(date -r "$cachef" +%s)) -le $expire ]; then
+		# active cache
+		cat $cachef
+	else
+		echo > $cachef
+		local repos="$(_flist_enumerable_repos)"
+		for repo in $repos; do
+			for app in $(flatpak remote-ls $repo); do
+				echo "$repo $app" | tee -a $cachef
+			done
+		done
+	fi
+}
+
+# the same as fall_apps but returns lovercase, friendly names
+# we will cache it also
+fall_apps_simple() {
+	local cachef="/tmp/x-appss.cache"
+	local expire=300 # 5 min
+
+	if [ -f "$cachef"  ] && [ $(expr $(date +%s) - $(date -r "$cachef" +%s)) -le $expire ]; then
+		# active cache
+		cat $cachef
+	else
+		echo > $cachef
+		apps="$(fall_apps "nocache" | sort -u)" #disable fullname caching
+		for app in "$apps"; do
+			echo "$app" | cut -d' ' -f2 | rev | cut -d'.' -f1| rev | tr '[:upper:]' '[:lower:]' | tee -a $cachef
+		done
+	fi
+}
+
+finstalled_apps_simple() {
+	local apps="$(flatpak list --app)"
+
+	for app in "$apps"; do
+		echo "$app" | cut -d' ' -f1 | rev | cut -d'.' -f1| rev | tr '[:upper:]' '[:lower:]' | cut -d'/' -f1
+	done
+}
+
+#_swap_cols() {
+#	local line="$1"
+#	local repo="$(echo $line | xargs | cut -d' ' -f2)"
+#	local app="$(echo $line | xargs | cut -d' ' -f1)"
+#	echo "$repo $app"
+#}
+
+# determine if script is running with sudo, if so, switch back to invoker
+_run_sudo() {
+	local command="$1"
+	local install_as_user="$2"
+
+	if [ ! -z "$install_as_user" -a "$(whoami)" != "$(logname)" ]; then
+		echo "sudo -u $(logname) $command"
+		sudo -u $(logname) $command
+	else
+		$command
+	fi	
+}
+
+_mkrunner() {
+	local runpath="/usr/local/bin"
+	local appfullname="$1"
+	local appshortname=$(echo "$appfullname" | rev | cut -d'.' -f1| rev | tr '[:upper:]' '[:lower:]')
+	echo -e "#/bin/bash\nflatpak run $app" > $runpath/$appshortname && \
+		chmod +x $runpath/$appshortname && \
+		echo "To run '$appfullname' run: '$appshortname' (runner installed to '/usr/local/bin')"
+}
+
+frepo_and_name() {
+	local search="$1"
+	local apps="$(fall_apps)"
+	local count="$(echo "$apps" | grep -ic \\.$search)"
+	
+	if [ "$count" -gt "1" ]; then
+		frepo_and_name_unprotected $search "$apps"
+		echo
+		echo "ERROR: app name is not precise, returned more then one app."
+		exit 1
+	fi
+	
+	frepo_and_name_unprotected $search "$apps"
+}
+
+fname() {
+	frepo_and_name "$1" | cut -d' ' -f2
+}
+
+fsearch() {
+	local OPTS="$@"
+	local pk=""
+        
+        for a in $OPTS; do
+                case "$a" in
+			fsearch) ;;
+                	-h | --help) usage;;
+                	*) pk="$a";;
+		esac
+	done
+	
+	pk=$(echo "$pk" | xargs)
+
+	#alternative :
+	lapps="$(flatpak search "$pk")"
+	if [ "$lapps" = "No matches found" ]; then
+		lapps="$(frepo_and_name_unprotected "$pk" "$(fall_apps)")"
+		if [ ! -z "$lapps" ]; then	
+			echo "INFO: No cache. Run 'fupgrade' for better search."
+		fi
+	fi
+	echo "$lapps"
+}
+
+fadd() {
+        local OPTS="$@"
+        local user=""
+	local pk=""
+        
+        for a in $OPTS; do
+                case "$a" in
+		fadd) ;;
+                -u | --user) user="--user " ;;
+                -h | --help) usage;;
+                *) pk="$a $pk";;
+                esac
+	done
+	
+	pk=$(echo "$pk" | xargs)
+
+	repo_and_app="$(frepo_and_name "$pk")"
+	app=$(echo "$repo_and_app" | cut -d' ' -f2)
+
+	_run_sudo "flatpak install $user$repo_and_app" $user
+
+	_mkrunner "$app"
+}
+
+fdel() {
+        local OPTS="$@"
+        local user=""
+	local pk=""
+        
+        for a in $OPTS; do
+                case "$a" in
+			fdel) ;;
+                	-u | --user) user="--user " ;;
+                	-h | --help) usage;;
+                	*) pk="$a $pk";;
+		esac
+        done
+	
+	pk=$(echo "$pk" | xargs)
+
+	_run_sudo "flatpak --force-remove uninstall $user$(fname "$pk")" $user
+}
+
+fupgrade() {
+	local OPTS="$@"
+        local user=""
+	local pk=""
+        
+        for a in $OPTS; do
+                case "$a" in
+			fupgrade) ;;
+                	-u | --user) user="--user " ;;
+                	*) usage;;
+		esac
+        done
+
+	_run_sudo "flatpak ${user}--force-remove update" $user
+}
+
+finfo() {
+	flatpak remote-info $(frepo_and_name "$1")
+}
+
+flist() {
+
+	local OPTS="$@"
+        local installed=""
+	local simple=""
+	local user=""
+        
+        for a in $OPTS; do
+                case "$a" in
+			flist) ;;
+			-u | --user) user="--user ";;
+                	-i | --installed) installed="yes";;
+			-s | --simple) simple="yes";;
+                	*) usage;;
+		esac
+	done
+	
+	if [ -n "$installed" -a -z "$simple" ]; then
+		echo "flatpak ${user}list"
+		flatpak ${user}list
+	elif [ -n "$installed" -a -n "$simple" ]; then
+		finstalled_apps_simple
+	elif [ -z "$installed" -a -n "$simple" ]; then
+		fall_apps_simple
+	else
+		# can we make it bla bla...? if shortened?
+		#flatpak search . | cut -c1-$(stty size </dev/tty | cut -d' ' -f2)
+		fall_apps
+	fi
+}
+
+frepoadd() {
+	local OPTS="$@"
+	local repo=""
+	local user=""
+
+	for a in $OPTS; do
+        	case "$a" in
+			frepoadd) ;;
+			-u|--user) user="--user ";;
+                	flathub) repo="flathub";;
+			*) echo "ERROR: Unknown repo '$a', currently availabile: flathub" ;;
+		esac
+	done
+	case "$repo" in
+		flathub) echo "Installing $repo ..."; flatpak remote-add ${user}--if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo ;;
+	esac
+}
+
+frepodel() {
+	local OPTS="$@"
+	local repo=""
+	local user=""
+
+	for a in $OPTS; do
+        	case "$a" in
+			frepoadd) ;;
+			-u|--user) user="--user ";;
+                	flathub) repo="flathub";;
+			*) echo "ERROR: Unknown repo '$a', currently availabile: flathub" ;;
+		esac
+	done
+	case "$repo" in
+		flathub) echo "Removing $repo ..."; flatpak remote-delete ${user}flathub ;;
+	esac
+}
+
 # main
 # this sucks, busybox getopt is lacking -n param, so will not work there
 #OPTS=`getopt -l sync -o s -n 'parse-options' "$@"`
@@ -166,8 +456,22 @@ case "$main_command" in
 	files) files "$2";;
 	del|remove) del "$all_commands";;
 	list) list;;
+	repoadd) repoadd "$all_commands";;
+	repodel) repodel "$all_commands";;
+	repolist) repolist "$all_commands";;
+	
 	son|senable) son "$2";;
 	soff|sdisable) soff "$2";;
 	slist) slist;;
+
+	fsearch) fsearch "$all_commands";;	
+	fadd) fadd "$all_commands";;
+	fdel) fdel "$all_commands";;
+	fupgrade) fupgrade "$all_commands";;
+	finfo) finfo "$2";;
+	flist) flist "$all_commands";;
+	frepoadd) frepoadd "$all_commands";;
+	frepodel) frepodel "$all_commands";;
+
 	*) usage; exit 1;;
 esac
