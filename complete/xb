@@ -9,11 +9,11 @@ _xbps_installed_packages() {
 }
 
 _xbps_all_repos() {
-	x repolist | cut -d" " -f2
+	xb repolist | cut -d" " -f2
 }
 
 _xbps_installed_repos() {
-	x repolist -l | cut -d" " -f2
+	xb repolist -l | cut -d" " -f2
 }
 
 _xbps_all_reply() {
@@ -54,11 +54,11 @@ _sv_disabled_reply() {
 }
 
 _flatpak_all_packages() {
-	x flist -s 
+	xb flist -s 
 }
 
 _flatpak_installed_packages() {
-	x flist -i
+	xb flist -i
 }
 
 _flatpak_all_packages_reply() {
@@ -69,7 +69,7 @@ _flatpak_repos_reply() {
 	COMPREPLY=( $( compgen -W 'flathub' -- "$1" ) )
 }
 
-_x() {
+_xb() {
 	local actions="add del files info list search upgrade repoadd repodel repolist slist son soff fadd fdel finfo flist fsearch fupgrade frepoadd frepodel"
 	local cur
 	cur="${COMP_WORDS[COMP_CWORD]}"
@@ -106,6 +106,6 @@ _x() {
 	fi
 }
 
-complete -F _x x
+complete -F _xb xb
 
 # ex: filetype=sh

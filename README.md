@@ -6,9 +6,10 @@ Ahoy VoidLinux comrades!
 
 This is just quick wrapper for XBPS and runit. I think there are already some alternatives and this is probably the simplest wrapper. It provides simple interface inspired by Alpine Linux apk (similar to Debian's aptitude).
 
-**There are actually two functionalities:**
+**There are actually tree functionalities:**
 
 - package management,
+- flatpak management,
 - service management.
 
 And I think best feature is ... **bash autocompletion**!
@@ -16,40 +17,51 @@ And I think best feature is ... **bash autocompletion**!
 ### Examples for people new to completion:
 
 ```shell
-x <TAB>         #for all actions
-x add abi<TAB>  #will complete to abiword
-x son <TAB>     #will list only disabled services
+xb <TAB>         #for all actions
+xb add abi<TAB>  #will complete to abiword
+xb son <TAB>     #will list only disabled services
+xb fadd <TAB>    #will list flatpak packages
 ```
 
 ### Installation:
 
 ```shell
-$ git clone https://github.com/ernierasta/x && cd x
-$ sudo cp x /usr/local/bin/
-$ sudo cp complete/x /usr/share/bash-completion/completions/
+$ git clone https://github.com/ernierasta/xb && cd x
+$ sudo cp xb /usr/local/bin/
+$ sudo cp complete/xb /usr/share/bash-completion/completions/
+```
+Optionally you can make aliases, to use **x** as alias:
+```shell
+$ # command below will add alias to .bash_aliases if exist, otherwise to .bashrc
+$ [ -f ~/.bash_aliases ] && echo -e "alias x='sudo xb'\n_completion_loader xb\ncomplete -o bashdefault -o default -o nospace -F _xb x" >> ~/.bash_aliases || echo -e "alias x='sudo xb'\n_completion_loader xb\ncomplete -o bashdefault -o default -o nospace -F _xb x" >> ~/.bashrc
+
 ```
 Then open new terminal window.
 
 ### Usage:
 
 ```shell
-$ x add neovim mc
-$ x son sshd
+$ xb add neovim mc
+$ xb son sshd
+$ xb frepoadd flathub
+$ xb fadd blender
 ```
 
 For full help run:
 ```shell
-$ x
+$ xb
 ```
 
 ### Motivation:
 
-I find XBPS multi-binary not very convenient. Also enabling services is tedious and error prone.
+I find XBPS multi-binary not very convenient. Also enabling services is tedious and error prone. Lets not speak about
+flatpak interface ... ;-).
 
 ### Todo:
 
 - add autoinstall script,
-- add flatpak support (probably as separate set of commands, flatpack is slower then xbps),
+~~- add flatpak support (probably as separate set of commands, flatpak is slower then xbps),~~
+- fix short flatpak names (for now skype is there as "client", becouse of: com.skype.Client), test it more.
 - maybe add more commands if needed ...
 
 ### Alternatives:

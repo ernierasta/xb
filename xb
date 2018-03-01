@@ -9,10 +9,10 @@
 usage() {
 	echo \
 "Packages:
-	x [ACTION] [OPTION] [PKGNAME...]
+	xb [ACTION] [OPTION] [PKGNAME...]
 
 Services:
-	x [ACTION] [SERVICE]
+	xb [ACTION] [SERVICE]
 
 ACTIONS
 
@@ -139,7 +139,7 @@ repodel() {
 son() {
 	local svcname="$1"
 
-	[ -z "$svcname" ] && echo "Please enter service name. For example:\n  x son dbus" && exit 1
+	[ -z "$svcname" ] && echo "Please enter service name. For example:\n  xb son dbus" && exit 1
 
 	ln -s /etc/sv/$svcname /var/service/ && echo "Service $svcname enabled."
 }
@@ -147,7 +147,7 @@ son() {
 soff() {
 	local svcname="$1"
 
-	[ -z "$svcname" ] && echo "Please give service name. For example:\n  x soff dbus" && exit 1
+	[ -z "$svcname" ] && echo "Please give service name. For example:\n  xb soff dbus" && exit 1
 
 	rm /var/service/$svcname && echo "Service $svcname disabled."
 }
