@@ -23,6 +23,7 @@ update|upgrade			Update all packages.
 list				List all installed packeges.
 info				Show information about package.
 files				Show files in package.
+clean 				Remove orphans and clean cache.
 repoadd	<repository>		Add new <repository> (glibc only).
 repodel	<repository>		Remove installed <repository> (glibc only).
 repolist [-l]			List avaibile repos. Use -l to show installed repos.
@@ -118,6 +119,10 @@ info() {
 
 files() {
 	xbps-query -f "$1"
+}
+
+clean() {
+	xbps-remove -oO
 }
 
 repolist() {
@@ -456,6 +461,7 @@ case "$main_command" in
 	files) files "$2";;
 	del|remove) del "$all_commands";;
 	list) list;;
+	clean) clean;;
 	repoadd) repoadd "$all_commands";;
 	repodel) repodel "$all_commands";;
 	repolist) repolist "$all_commands";;

@@ -70,7 +70,7 @@ _flatpak_repos_reply() {
 }
 
 _xb() {
-	local actions="add del files info list search upgrade repoadd repodel repolist slist son soff fadd fdel finfo flist fsearch fupgrade frepoadd frepodel"
+	local actions="add del files info list search upgrade clean repoadd repodel repolist slist son soff fadd fdel finfo flist fsearch fupgrade frepoadd frepodel"
 	local cur
 	cur="${COMP_WORDS[COMP_CWORD]}"
 	
