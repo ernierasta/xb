@@ -20,6 +20,7 @@ add|install [-s] <packages>	Install <packages>. Use -s to sync index.
 del|remove [-o] <packages>	Remove <packages>. Use -o to remove only given packages.
 search [-l] <text>		Search for package. Use -l to search only installed.
 update|upgrade			Update all packages.
+checkupd			Returns number of waiting updates.
 list				List all installed packeges.
 info				Show information about package.
 files				Show files in package.
@@ -119,6 +120,10 @@ info() {
 
 files() {
 	xbps-query -f "$1"
+}
+
+checkupd() {
+	xbps-install -Sun | wc -l
 }
 
 clean() {
@@ -457,6 +462,7 @@ case "$main_command" in
 	add|install) add "$all_commands";;
 	search|find) search "$all_commands";;
 	upgrade|update) upgrade;;
+	checkupd) checkupd ;;
 	show|info) info "$2";;
 	files) files "$2";;
 	del|remove) del "$all_commands";;
