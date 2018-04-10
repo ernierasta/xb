@@ -123,7 +123,7 @@ files() {
 }
 
 checkupd() {
-	xbps-install -S && xbps-install -un | wc -l
+	xbps-install -S > /dev/null && xbps-install -un | wc -l
 }
 
 clean() {
