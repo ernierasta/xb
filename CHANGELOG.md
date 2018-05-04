@@ -17,3 +17,8 @@ v0.6:
 - added experimental support for flatpak (expect changes here)
 - added xbps repository management functions
 
+v0.6.1:
+-------
+
+- fixed flatpak
+- changed flatpak simple app names to contain last domain part - solves Skype.client vs Spotify.client

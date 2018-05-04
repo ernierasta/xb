@@ -189,23 +189,17 @@ slist() {
 
 # flatpak functions
 
-frepo_and_name_unprotected() {
-	local search="$1"
-	local apps="$2"
-	echo "$apps" | grep -i \\.$search
-}
-
 _flist_enumerable_repos(){
-	flatpak remotes | grep -v no-enumerate | cut -d' ' -f1
+	flatpak remotes | grep -v no-enumerate | cut -f1
 }
 
 # fall_apps will list all availabile flatpak apps
 # problem is, if repo has flag: no-enumerate flatpak remote-ls will fail
 # we need to find all repos without this flag and enumerate one by one ... yeah this sucks.
-# result is cached for an hour. This will make autocompletion usable.
+# result is cached for 5 minutes. This will make autocompletion usable.
 fall_apps() {
 	local nocache="$1"
-	local cachef="/tmp/x-apps.cache"
+	local cachef="/tmp/xb-apps.cache"
 	local expire=300 # 5 min
 
 	if [ -z $nocache ] && [ -f "$cachef"  ] && [ $(expr $(date +%s) - $(date -r "$cachef" +%s)) -le $expire ]; then
@@ -225,7 +219,7 @@ fall_apps() {
 # the same as fall_apps but returns lovercase, friendly names
 # we will cache it also
 fall_apps_simple() {
-	local cachef="/tmp/x-appss.cache"
+	local cachef="/tmp/xb-appss.cache"
 	local expire=300 # 5 min
 
 	if [ -f "$cachef"  ] && [ $(expr $(date +%s) - $(date -r "$cachef" +%s)) -le $expire ]; then
@@ -235,7 +229,7 @@ fall_apps_simple() {
 		echo > $cachef
 		apps="$(fall_apps "nocache" | sort -u)" #disable fullname caching
 		for app in "$apps"; do
-			echo "$app" | cut -d' ' -f2 | rev | cut -d'.' -f1| rev | tr '[:upper:]' '[:lower:]' | tee -a $cachef
+			echo "$app" | cut -d' ' -f2 | rev | cut -d'.' -f1,2| rev | tr '[:upper:]' '[:lower:]' | tee -a $cachef
 		done
 	fi
 }
@@ -244,7 +238,7 @@ finstalled_apps_simple() {
 	local apps="$(flatpak list --app)"
 
 	for app in "$apps"; do
-		echo "$app" | cut -d' ' -f1 | rev | cut -d'.' -f1| rev | tr '[:upper:]' '[:lower:]' | cut -d'/' -f1
+		echo "$app" | cut -d' ' -f1 | rev | cut -d'.' -f1,2| rev | tr '[:upper:]' '[:lower:]' | cut -d'/' -f1
 	done
 }
 
@@ -255,13 +249,12 @@ finstalled_apps_simple() {
 #	echo "$repo $app"
 #}
 
-# determine if script is running with sudo, if so, switch back to invoker
+# determine if script is running with sudo, if so, switch back to invoker if desired
 _run_sudo() {
 	local command="$1"
 	local install_as_user="$2"
 
 	if [ ! -z "$install_as_user" -a "$(whoami)" != "$(logname)" ]; then
-		echo "sudo -u $(logname) $command"
 		sudo -u $(logname) $command
 	else
 		$command
@@ -271,7 +264,7 @@ _run_sudo() {
 _mkrunner() {
 	local runpath="/usr/local/bin"
 	local appfullname="$1"
-	local appshortname=$(echo "$appfullname" | rev | cut -d'.' -f1| rev | tr '[:upper:]' '[:lower:]')
+	local appshortname=$(echo "$appfullname" | rev | cut -d'.' -f1,2| rev | tr '[:upper:]' '[:lower:]')
 	echo -e "#/bin/bash\nflatpak run $app" > $runpath/$appshortname && \
 		chmod +x $runpath/$appshortname && \
 		echo "To run '$appfullname' run: '$appshortname' (runner installed to '/usr/local/bin')"
@@ -280,16 +273,8 @@ _mkrunner() {
 frepo_and_name() {
 	local search="$1"
 	local apps="$(fall_apps)"
-	local count="$(echo "$apps" | grep -ic \\.$search)"
 	
-	if [ "$count" -gt "1" ]; then
-		frepo_and_name_unprotected $search "$apps"
-		echo
-		echo "ERROR: app name is not precise, returned more then one app."
-		exit 1
-	fi
-	
-	frepo_and_name_unprotected $search "$apps"
+	echo "$apps" | grep -i \\.$search
 }
 
 fname() {
@@ -313,7 +298,7 @@ fsearch() {
 	#alternative :
 	lapps="$(flatpak search "$pk")"
 	if [ "$lapps" = "No matches found" ]; then
-		lapps="$(frepo_and_name_unprotected "$pk" "$(fall_apps)")"
+		lapps="$(frepo_and_name "$pk" "$(fall_apps)")"
 		if [ ! -z "$lapps" ]; then	
 			echo "INFO: No cache. Run 'fupgrade' for better search."
 		fi
@@ -339,10 +324,7 @@ fadd() {
 
 	repo_and_app="$(frepo_and_name "$pk")"
 	app=$(echo "$repo_and_app" | cut -d' ' -f2)
-
-	_run_sudo "flatpak install $user$repo_and_app" $user
-
-	_mkrunner "$app"
+	_run_sudo "flatpak install $user$repo_and_app" $user && _mkrunner "$app"
 }
 
 fdel() {

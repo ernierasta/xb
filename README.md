@@ -44,7 +44,7 @@ Then open new terminal window.
 $ xb add neovim mc
 $ xb son sshd
 $ xb frepoadd flathub
-$ xb fadd blender
+$ xb fadd blender.blender
 ```
 
 For full help run:
@@ -62,7 +62,7 @@ flatpak interface ... ;-).
 - add autoinstall script,
 
 ~~- add flatpak support (probably as separate set of commands, flatpak is slower then xbps),~~
-- fix short flatpak names (for now skype is there as "client", becouse of: com.skype.Client), test it more.
+~~- fix short flatpak names (for now skype is there as "client", because of: com.skype.Client), test it more.~~
 - maybe add more commands if needed ...
 
 ### Alternatives:
