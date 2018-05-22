@@ -6,7 +6,7 @@ Ahoy VoidLinux comrades!
 
 This is just quick wrapper for XBPS, flatpak and runit. I think there are already some alternatives and this is probably the simplest wrapper. It provides simple interface inspired by Alpine Linux apk (similar to Debian's aptitude).
 
-**There are actually tree functionalities:**
+**There are actually three functionalities:**
 
 - package management,
 - flatpak management,
