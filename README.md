@@ -68,4 +68,5 @@ flatpak interface ... ;-).
 ### Alternatives:
 
 - [vpm](https://github.com/netzverweigerer/vpm) - probably advanced, more powerful wrapper, with colors!
+- [xbps-pkg](https://github.com/lukrop/xbps-pkg) - simple wrapper for XBPS inspired by FreeBSD's pkg
 - [octoxbps](https://github.com/aarnt/octoxbps) - QT5 GUI for XBPS
