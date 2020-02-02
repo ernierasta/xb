@@ -39,9 +39,10 @@ flist [-i]			List remote packages. Use -i to list installed.
 
 SERVICES
 
-slist 		Show all services, enabled and disabled.
-son <service>	Enable and start service.
-soff <service>	Disable and stop service.
+slist 		   Show all services, enabled and disabled.
+son <service>	   Enable and start service.
+soff <service>	   Disable and stop service.
+srestart <service> Restart service.
 
 "
 }
@@ -160,6 +161,15 @@ soff() {
 	[ -z "$svcname" ] && echo "Please give service name. For example:\n  xb soff dbus" && exit 1
 
 	rm /var/service/$svcname && echo "Service $svcname disabled."
+}
+
+srestart() {
+	local svcname="$1"
+
+	[ -z "$svcname" ] && echo "Please give service name. For example:\n  xb srestart dbus" && exit 1
+	
+	soff "$svcname"
+	son "$svcname"
 }
 
 slist() {
@@ -324,6 +334,7 @@ fadd() {
 
 	repo_and_app="$(frepo_and_name "$pk")"
 	app=$(echo "$repo_and_app" | cut -d' ' -f2)
+	echo  "flatpak install $user$repo_and_app $user"
 	_run_sudo "flatpak install $user$repo_and_app" $user && _mkrunner "$app"
 }
 
@@ -343,7 +354,7 @@ fdel() {
 	
 	pk=$(echo "$pk" | xargs)
 
-	_run_sudo "flatpak --force-remove uninstall $user$(fname "$pk")" $user
+	_run_sudo "flatpak uninstall --app $user$(fname "$pk")" $user
 }
 
 fupgrade() {
@@ -457,6 +468,7 @@ case "$main_command" in
 	son|senable) son "$2";;
 	soff|sdisable) soff "$2";;
 	slist) slist;;
+	srestart) srestart "$2";;
 
 	fsearch) fsearch "$all_commands";;	
 	fadd) fadd "$all_commands";;

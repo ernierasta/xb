@@ -70,7 +70,7 @@ _flatpak_repos_reply() {
 }
 
 _xb() {
-	local actions="add del files info list search upgrade checkupd clean repoadd repodel repolist slist son soff fadd fdel finfo flist fsearch fupgrade frepoadd frepodel"
+	local actions="add del files info list search upgrade checkupd clean repoadd repodel repolist slist son soff srestart fadd fdel finfo flist fsearch fupgrade frepoadd frepodel"
 	local cur
 	cur="${COMP_WORDS[COMP_CWORD]}"
 	
@@ -90,7 +90,7 @@ _xb() {
 			repodel)
 				_xbps_installed_repos_reply $cur
 			;;
-			soff)
+			soff|srestart)
 				_sv_enabled_reply $cur
 			;;
 			son)
